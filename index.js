@@ -1,17 +1,25 @@
-const functions = require("firebase-functions");
 const cors = require("cors");
 const readline = require("readline");
 const express = require("express");
 require("dotenv").config();
-const { USERNAME, PASSWORD, SQLPASSWORD, PORT } = process.env;
-const routingUtils = require("../middleware/routingUtils");
+const { PORT } = process.env;
+const routingUtils = require("./middleware/routingUtils");
 const utils = require("./utils");
+
+const users = require("./_users/routs");
+const questions = require("./_questions/routs");
+const answers = require("./_answers/routs");
+const db = require("./sql/database.js");
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(routingUtils.routingLoger);
+
+app.use("/users", users);
+app.use("/questions", questions);
+app.use("/answers", answers);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -31,30 +39,29 @@ rl.on("line", async (input) => {
     console.log(
       utils
         .comands()
-        ["highlightWord"](`\nInvalid command: ${command}`, command, 31)
+        ["highlightWord"](`\nInvalid command: ${command}`, command, 33)
     );
     console.log(helptest);
   }
   rl.prompt();
 });
 
-app.get("/test", async (req, res) => {
-  res.send("It works!!");
+// start server with node index.js or npm start
+const server = app.listen(PORT, async () => {
+  console.log("Srarting server...");
+  await Promise.all([utils.initialize(), db.connect()]);
+  console.log(`Server is listening on http://localhost:${PORT}`);
+  rl.prompt();
 });
-exports.app = functions.https.onRequest(app);
 
-// const server = app.listen(PORT, async () => {
-//   console.log("Srarting server...");
-//   await Promise.all([utils.initialize()]);
-//   console.log(`Server is listening on http://localhost:${PORT}`);
-//   rl.prompt();
-// });
+//Gracefully handle server shutdown
+process.on("SIGINT", async () => {
+  console.log("Shutting down server...");
+  await Promise.all([db.disconnect()]);
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(); // Terminate the Node.js process after closing the server
+  });
+});
 
-// Gracefully handle server shutdown
-// process.on("SIGINT", () => {
-//   console.log("Shutting down server...");
-//   server.close(() => {
-//     console.log("Server closed");
-//     process.exit(); // Terminate the Node.js process after closing the server
-//   });
-// });
+module.exports = { server };

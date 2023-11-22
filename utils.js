@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { highlightWord } = require("./util/highlight");
 
 let utilsList = {};
 const descriptions = {
@@ -157,10 +158,13 @@ function appendToCSV(filePath, data) {
 async function initialize() {
   try {
     await utils();
-    const string = "Initialized: Utilities List";
+    let string = "Utilities: Initialized";
+    string = highlightWord(string, "Initialized", 32);
     console.log(string);
   } catch (error) {
-    console.error("Initialization failed:", error);
+    let string = "Utilities: FAILED";
+    string = highlightWord(string, "FAILED", 31);
+    string = console.error(string, error);
   }
 }
 

@@ -1,19 +1,27 @@
 const utils = require("../utils");
+const { disconnect } = require("../sql/database.js");
+const { server } = require("../index");
 
 const q = () => {
-  console.log("Exiting server...");
-  process.exit(); // Terminate the Node.js process
+  shutdown(); // Terminate the Node.js process
 };
 
 const quit = () => {
-  console.log("Exiting server...");
-  process.exit(); // Terminate the Node.js process
+  shutdown(); // Terminate the Node.js process
 };
 
 const exit = () => {
-  console.log("Exiting server...");
-  process.exit(); // Terminate the Node.js process
+  shutdown(); // Terminate the Node.js process
 };
+
+async function shutdown() {
+  console.log("Shutting down server...");
+  await Promise.all([disconnect()]);
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(); // Terminate the Node.js process after closing the server
+  });
+}
 
 /**
  * Displays help information for specified commands or all available commands.
@@ -28,8 +36,8 @@ const help = (commands = []) => {
       let string = `\n----------------------------------------------------------------\nCommand\t-\t${command}\n\t${
         utils.comandDescriptions()[command]
       }\n`;
-      string = utils.comands()["highlightWord"](string, "Command", 32);
-      string = utils.comands()["highlightWord"](string, command, 31);
+      string = utils.comands()["highlightWord"](string, "Command", 35);
+      string = utils.comands()["highlightWord"](string, command, 36);
       console.log(string);
     }
   } else {
@@ -37,8 +45,8 @@ const help = (commands = []) => {
     for (let command in utils.comands()) {
       let string = `\n---------------------------------------------------------------
       \nCommand\t-\t${command}\n\t${utils.comandDescriptions()[command]}\n`;
-      string = utils.comands()["highlightWord"](string, "Command", 32);
-      string = utils.comands()["highlightWord"](string, command, 31);
+      string = utils.comands()["highlightWord"](string, "Command", 35);
+      string = utils.comands()["highlightWord"](string, command, 36);
       console.log(string);
     }
   }
