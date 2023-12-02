@@ -1,6 +1,7 @@
 const mysql = require("mysql2/promise");
 const { highlightWord } = require("../util/highlight");
 const { _NETID, _DATABASEPASSWORD, _DATABASEPREFIX, _HOSTNAME } = process.env;
+const Connection = () => connection;
 let connection;
 
 async function connect() {
@@ -24,8 +25,6 @@ async function connect() {
     let string = "Database: Connected";
     string = highlightWord(string, "Connected", 32);
     console.log(string);
-
-    await fetchQuestionById(1); // Assuming you have a function for this
   } catch (error) {
     let string = "Database: Failed to connect";
     string = highlightWord(string, "Failed to connect", 31);
@@ -49,16 +48,4 @@ async function disconnect() {
   }
 }
 
-async function fetchQuestionById(questionId) {
-  try {
-    const [rows, fields] = await connection.execute(
-      "SELECT * FROM questions WHERE id = ?",
-      [questionId]
-    );
-    console.log("Fetched question:", rows[0]);
-  } catch (error) {
-    console.error("Error fetching question:", error);
-  }
-}
-
-module.exports = { connect, disconnect };
+module.exports = { connect, disconnect, Connection };

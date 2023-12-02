@@ -28,7 +28,11 @@ const descriptions = {
    *
    * @param {string} text - Original Text.
    * @param {string} word - Words you want to chage.
-   * @param {number} color - New Color (31 Red, 32 Green, 33 Yellow, 34 Blue, 35 Magenta, 36 Cyan, 37 White)
+   * @param {string} color - New Color (
+   * reset,bright,dim,underscore,blink,reverse,hidden,black,
+   * red,green,yellow,blue,magenta,cyan,white,
+   * BGblack,BGred,BGgreen,BGyellow,BGblue,BGmagenta,BGcyan,BGwhite
+   * )
    * @returns {string} The text with color chages.
    */`,
   help: `

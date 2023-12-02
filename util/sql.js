@@ -1,0 +1,420 @@
+const { Connection } = require("../sql/database");
+const uuid = require("uuid").v4;
+
+async function getAllUsersNameEmail() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT Name, Email FROM User"
+    );
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+async function getAllQuestions() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT * FROM Questions"
+    );
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+async function getAllAnswers() {
+  try {
+    const [rows, fields] = await Connection().execute("SELECT * FROM Answers");
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+async function getQuestionsGuessedCount() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT Q_id, COUNT(*) as Num_Guesses FROM Guessed GROUP BY Q_id"
+    );
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+//get top 5 users who answered the most questions correctly in order
+async function getUsersWhoAnsweredTheMostQuestions() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `SELECT * COUNT(A.Q_id) AS correct_answers_count 
+      FROM User U 
+      JOIN Answers A ON U.Id = A.Id 
+      JOIN Questions Q ON A.Q_id = Q.Q_id AND A.choice = Q.answer 
+      GROUP BY U.Id, U.name, U.email 
+      ORDER BY correct_answers_count DESC 
+      LIMIT 5;`
+    );
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+//get top 5 useres with highest answers correct %
+async function getTopUsersByCorrectPercentage() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `SELECT
+          U.Id,
+          U.name,
+          U.email,
+          COUNT(A.Q_id) AS total_questions_answered,
+          SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) AS correct_answers_count,
+          SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id) * 100 AS correct_percentage
+      FROM
+          User U
+      JOIN
+          Answers A ON U.Id = A.Id
+      JOIN
+          Questions Q ON A.Q_id = Q.Q_id
+      GROUP BY
+          U.Id, U.name, U.email
+      ORDER BY
+          correct_percentage DESC, total_questions_answered DESC
+      LIMIT
+          5;`
+    );
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// get all from randome question
+async function getRandomQuestion(questionId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `
+      SELECT
+          *
+      FROM
+          Questions
+      ORDER BY
+          RAND()
+      LIMIT 1;
+    `
+    );
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// random question that the user has not answered yet
+async function getRandomUnansweredQuestion(userId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `
+      SELECT 
+          * 
+      FROM
+          Questions Q
+      LEFT JOIN
+          Answers A ON Q.Q_id = A.Q_id AND A.Id = ?
+      WHERE
+          A.Q_id IS NULL
+      ORDER BY
+          RAND()
+      LIMIT 1;
+    `,
+      [userId]
+    );
+
+    console.log(rows[0], fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// questions witrh most correct answers
+async function getTopQuestionsWithMostCorrectAnswers() {
+  try {
+    const [rows, fields] = await Connection().execute(`
+      SELECT
+        Q.Q_id,
+        Q.prompt,
+        Q.A,
+        Q.B,
+        Q.C,
+        Q.D,
+        Q.E,
+        Q.answer,
+        COUNT(A.Q_id) AS correct_answers_count
+      FROM
+        Questions Q
+      LEFT JOIN
+        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.choice
+      GROUP BY
+        Q.Q_id, Q.prompt, Q.A, Q.B, Q.C, Q.D, Q.E, Q.answer
+      ORDER BY
+        correct_answers_count DESC
+      LIMIT 5;
+    `);
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+//get easyest questions
+async function getTopQuestionsByCorrectPercentage() {
+  try {
+    const [rows, fields] = await Connection().execute(`
+      SELECT
+        Q.Q_id,
+        Q.prompt,
+        Q.A,
+        Q.B,
+        Q.C,
+        Q.D,
+        Q.E,
+        Q.answer,
+        COUNT(DISTINCT A.Id) AS total_users,
+        COUNT(A.Q_id) AS correct_answers_count,
+        (COUNT(A.Q_id) / COUNT(DISTINCT A.Id)) * 100 AS correct_percentage
+      FROM
+        Questions Q
+      LEFT JOIN
+        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.choice
+      GROUP BY
+        Q.Q_id, Q.prompt, Q.A, Q.B, Q.C, Q.D, Q.E, Q.answer
+      ORDER BY
+        correct_percentage DESC, total_users DESC
+      LIMIT 5;
+    `);
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// get amout of hints on a question
+async function getHintUsageCountForQuestion(questionId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `
+      SELECT
+        Q.Q_id,
+        Q.prompt,
+        COUNT(H.Id) AS hint_usage_count
+      FROM
+        Questions Q
+      LEFT JOIN
+        Hint H ON Q.Q_id = H.Q_id
+      WHERE
+        Q.Q_id = ? -- Replace ? with the actual question ID
+      GROUP BY
+        Q.Q_id, Q.prompt;
+    `,
+      [questionId]
+    );
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+//user hint count
+async function getHintUsageCountForUser(userId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `
+      SELECT
+        U.Id,
+        U.name,
+        U.email,
+        COUNT(H.Id) AS hint_usage_count
+      FROM
+        User U
+      LEFT JOIN
+        Hint H ON U.Id = H.Id
+      WHERE
+        U.Id = ?
+      GROUP BY
+        U.Id, U.name, U.email;
+    `,
+      [userId]
+    );
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// user accuracy check
+async function getUserAccuracy(userId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      `
+      SELECT
+        U.Id,
+        U.name,
+        U.email,
+        COUNT(A.Q_id) AS total_answers,
+        SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) AS correct_answers,
+        (SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id)) * 100 AS accuracy_percentage
+      FROM
+        User U
+      LEFT JOIN
+        Answers A ON U.Id = A.Id
+      LEFT JOIN
+        Questions Q ON A.Q_id = Q.Q_id
+      WHERE
+        U.Id = ?
+      GROUP BY
+        U.Id, U.name, U.email;
+    `,
+      [userId]
+    );
+
+    console.log(rows, fields);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// add user
+async function addUser(name, email) {
+  try {
+    const lastId = await getLastUserId();
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO User (Id ,name, email) VALUES (? ,?, ?);",
+      [lastId + 1, name, email]
+    );
+
+    console.log("User added successfully:", rows);
+  } catch (error) {
+    console.error("Error adding user:", error);
+  }
+}
+
+//add new question
+async function addQuestion(
+  prompt,
+  optionA,
+  optionB,
+  optionC,
+  optionD,
+  optionE,
+  answer
+) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO Questions (prompt, A, B, C, D, E, answer) VALUES (?, ?, ?, ?, ?, ?, ?);",
+      [prompt, optionA, optionB, optionC, optionD, optionE, answer]
+    );
+
+    console.log("Question added successfully:", rows);
+  } catch (error) {
+    console.error("Error adding question:", error);
+  }
+}
+
+//add new answer
+async function addAnswer(questionId, userId, choice) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO Answers (Q_id, Id, choice) VALUES (?, ?, ?);",
+      [questionId, userId, choice]
+    );
+
+    console.log("Answer added successfully:", rows);
+  } catch (error) {
+    console.error("Error adding answer:", error);
+  }
+}
+
+//add new hint
+async function addHint(questionId, userId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO Hint (Q_id, Id) VALUES (?, ?);",
+      [questionId, userId]
+    );
+
+    console.log("Hint added successfully:", rows);
+  } catch (error) {
+    console.error("Error adding hint:", error);
+  }
+}
+
+//delete user
+async function removeUser(userId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "DELETE FROM User WHERE Id = ?;",
+      [userId]
+    );
+
+    console.log("User removed successfully:", rows);
+  } catch (error) {
+    console.error("Error removing user:", error);
+  }
+}
+
+//delete question
+async function removeQuestion(questionId) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "DELETE FROM Questions WHERE Q_id = ?;",
+      [questionId]
+    );
+
+    console.log("Question removed successfully:", rows);
+  } catch (error) {
+    console.error("Error removing question:", error);
+  }
+}
+
+//DO NOT ADD
+async function getLastUserId() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT Id FROM User ORDER BY Id DESC LIMIT 1;"
+    );
+    if (rows.length > 0) {
+      return rows[0].Id;
+    } else {
+      return null; // No users in the table
+    }
+  } catch (error) {
+    console.error("Error getting last user ID:", error);
+    return null;
+  }
+}
+module.exports = {
+  getAllUsersNameEmail,
+  getAllQuestions,
+  getQuestionsGuessedCount,
+  getAllAnswers,
+  getUsersWhoAnsweredTheMostQuestions,
+  getTopUsersByCorrectPercentage,
+  getRandomQuestion,
+  getRandomUnansweredQuestion,
+  getTopQuestionsWithMostCorrectAnswers,
+  getTopQuestionsByCorrectPercentage,
+  getHintUsageCountForQuestion,
+  getHintUsageCountForUser,
+  getUserAccuracy,
+  addUser,
+  addQuestion,
+  addAnswer,
+  addHint,
+  removeUser,
+  removeQuestion,
+};
