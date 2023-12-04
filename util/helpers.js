@@ -1,6 +1,4 @@
 const utils = require("../utils");
-const { disconnect } = require("../sql/database.js");
-const { server } = require("../index");
 
 const q = () => {
   shutdown(); // Terminate the Node.js process
@@ -14,13 +12,9 @@ const exit = () => {
   shutdown(); // Terminate the Node.js process
 };
 
+// callses SIGINT event
 async function shutdown() {
-  console.log("Shutting down server...");
-  await Promise.all([disconnect()]);
-  server.close(() => {
-    console.log("Server closed");
-    process.exit(); // Terminate the Node.js process after closing the server
-  });
+  process.emit("SIGINT");
 }
 
 /**
@@ -30,26 +24,45 @@ async function shutdown() {
  *                              If empty, help information for all available commands is displayed.
  */
 const help = (commands = []) => {
-  if (commands.length > 0) {
-    // Display help information for the specified commands
-    for (const command of commands) {
-      let string = `\n----------------------------------------------------------------\nCommand\t-\t${command}\n\t${
-        utils.comandDescriptions()[command]
-      }\n`;
-      string = utils.comands()["highlightWord"](string, "Command", 35);
-      string = utils.comands()["highlightWord"](string, command, 36);
-      console.log(string);
+  try {
+    if (commands.length > 0) {
+      // Display help information for the specified commands
+      for (const command of commands) {
+        let string = `command ${command} args ${
+          utils.comands()[`${command}`].length
+        }`;
+        string = utils
+          .comands()
+          ["highlightWord"](
+            string,
+            utils.comands()[`${command}`].length,
+            "green"
+          );
+        string = utils.comands()["highlightWord"](string, "command", "dim");
+        string = utils.comands()["highlightWord"](string, "args", "dim");
+        string = utils.comands()["highlightWord"](string, command, "blue");
+        console.log(string);
+      }
+    } else {
+      // Display help information for all available commands
+      for (let command in utils.comands()) {
+        let string = ` command ${command} args ${
+          utils.comands()[`${command}`].length
+        }`;
+        string = utils
+          .comands()
+          ["highlightWord"](
+            string,
+            utils.comands()[`${command}`].length,
+            "green"
+          );
+        string = utils.comands()["highlightWord"](string, "command", "dim");
+        string = utils.comands()["highlightWord"](string, "args", "dim");
+        string = utils.comands()["highlightWord"](string, command, "blue");
+        console.log(string);
+      }
     }
-  } else {
-    // Display help information for all available commands
-    for (let command in utils.comands()) {
-      let string = `\n---------------------------------------------------------------
-      \nCommand\t-\t${command}\n\t${utils.comandDescriptions()[command]}\n`;
-      string = utils.comands()["highlightWord"](string, "Command", 35);
-      string = utils.comands()["highlightWord"](string, command, 36);
-      console.log(string);
-    }
-  }
+  } catch (err) {}
 };
 
 module.exports = { help, q, exit, quit };

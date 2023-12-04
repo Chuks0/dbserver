@@ -35,12 +35,22 @@ rl.on("line", async (input) => {
     utils.comands()[command](...args);
   } else {
     let helptest = "Please use help to see list of commands\n";
-    helptest = utils.comands()["highlightWord"](helptest, "help", 32);
-    console.log(
-      utils
-        .comands()
-        ["highlightWord"](`\nInvalid command: ${command}`, command, 33)
-    );
+    helptest = utils
+      .comands()
+      ["highlightWord"](
+        helptest,
+        "Please use help to see list of commands",
+        "dim"
+      );
+    let log = utils
+      .comands()
+      ["highlightWord"](
+        `\nInvalid command: ${command}`,
+        "Invalid command:",
+        "dim"
+      );
+    log = utils.comands()["highlightWord"](log, command, "red");
+    console.log(log);
     console.log(helptest);
   }
   rl.prompt();
@@ -48,20 +58,36 @@ rl.on("line", async (input) => {
 
 // start server with node index.js or npm start
 const server = app.listen(PORT, async () => {
-  console.log("Srarting server...");
+  let string = "\t→\tSrarting server...";
+  string = utils.highlightWord(string, "Srarting server...", "dim");
+  string = utils.highlightWord(string, "→", "green");
+  console.log(string);
   await Promise.all([utils.initialize(), db.connect()]);
-  console.log(`Server is listening on http://localhost:${PORT}`);
+  string = `\t→\tServer is listening on http://localhost:${PORT}`;
+  string = utils.highlightWord(string, "→", "dim");
+  string = utils.highlightWord(string, "→", "green");
+  string = utils.highlightWord(string, "Server is listening on", "dim");
+  string = utils.highlightWord(string, "http://localhost:", "blue");
+  string = utils.highlightWord(string, `${PORT}`, "cyan");
+  console.log(string);
   rl.prompt();
 });
 
 //Gracefully handle server shutdown
 process.on("SIGINT", async () => {
-  console.log("Shutting down server...");
+  let string = "\t→\tShutting down server...";
+  string = utils.highlightWord(string, "→", "green");
+  string = utils.highlightWord(string, "Shutting down server...", "dim");
+  console.log(string);
   await Promise.all([db.disconnect()]);
   server.close(() => {
-    console.log("Server closed");
+    string = "\t→\tServer: Closed";
+    string = utils.highlightWord(string, "→", "dim");
+    string = utils.highlightWord(string, "→", "green");
+    string = utils.highlightWord(string, "Server:", "dim");
+    string = utils.highlightWord(string, "Closed", "bright");
+
+    console.log(string);
     process.exit(); // Terminate the Node.js process after closing the server
   });
 });
-
-module.exports = { server };

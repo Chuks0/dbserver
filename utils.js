@@ -3,49 +3,8 @@ const path = require("path");
 const { highlightWord } = require("./util/highlight");
 
 let utilsList = {};
-const descriptions = {
-  q: `
-  /**
-   * Terminate the Node.js process
-   * /`,
-  quit: `
-  /**
-   * Terminate the Node.js process
-   * /`,
-  exit: `
-  /**
-   * Terminate the Node.js process
-   * /`,
-  getFilesFromPath: `
-  /**
-   * Retrieves a list of files from the specified directory path and logs their names to the console.
-   *
-   * @param {string} path - The path of the directory. Defaults to the current directory if not provided.
-   */`,
-  highlightWord: `
-  /**
-   * Changes the color of the words in the string.
-   *
-   * @param {string} text - Original Text.
-   * @param {string} word - Words you want to chage.
-   * @param {string} color - New Color (
-   * reset,bright,dim,underscore,blink,reverse,hidden,black,
-   * red,green,yellow,blue,magenta,cyan,white,
-   * BGblack,BGred,BGgreen,BGyellow,BGblue,BGmagenta,BGcyan,BGwhite
-   * )
-   * @returns {string} The text with color chages.
-   */`,
-  help: `
-  /**
-   * Displays help information for specified commands or all available commands.
-   *
-   * @param {string[]} commands - An array of command names for which help information is requested.
-   *                              If empty, help information for all available commands is displayed.
-   */`,
-};
 
 const comands = () => utilsList;
-const comandDescriptions = () => descriptions;
 
 /**
  * Asynchronously loads utility functions from a specified folder and merges them into a global utility object.
@@ -162,12 +121,17 @@ function appendToCSV(filePath, data) {
 async function initialize() {
   try {
     await utils();
-    let string = "Utilities: Initialized";
-    string = highlightWord(string, "Initialized", 32);
+    let string = "\t→\tUtilities: Initialized";
+    string = highlightWord(string, "→", "dim");
+    string = highlightWord(string, "→", "green");
+    string = highlightWord(string, "Utilities:", "dim");
+    string = highlightWord(string, "Initialized", "bright");
     console.log(string);
   } catch (error) {
-    let string = "Utilities: FAILED";
-    string = highlightWord(string, "FAILED", 31);
+    let string = "\t→\tUtilities: FAILED";
+    string = highlightWord(string, "→", "dim");
+    string = highlightWord(string, "→", "green");
+    string = highlightWord(string, "FAILED", "red");
     string = console.error(string, error);
   }
 }
@@ -176,6 +140,5 @@ module.exports = {
   initialize,
   utils,
   comands,
-  comandDescriptions,
-  convertFileToArray,
+  highlightWord,
 };

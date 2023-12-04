@@ -6,12 +6,14 @@ let connection;
 
 async function connect() {
   try {
-    let hostURL = `Connecting to database: ${_HOSTNAME}/${
+    let hostURL = `\t→\tConnecting to database: ${_HOSTNAME}/${
       _DATABASEPREFIX + _NETID
-    } as ${_NETID}`;
-    hostURL = highlightWord(hostURL, _HOSTNAME, 33);
-    hostURL = highlightWord(hostURL, _DATABASEPREFIX, 33);
-    hostURL = highlightWord(hostURL, _NETID, 33);
+    }`;
+    hostURL = highlightWord(hostURL, "→", "dim");
+    hostURL = highlightWord(hostURL, "→", "green");
+    hostURL = highlightWord(hostURL, "Connecting to database:", "dim");
+    hostURL = highlightWord(hostURL, _HOSTNAME + "/", "blue");
+    hostURL = highlightWord(hostURL, _DATABASEPREFIX + _NETID, "cyan");
     console.log(hostURL);
 
     // Establishing a connection
@@ -22,12 +24,18 @@ async function connect() {
       database: _DATABASEPREFIX + _NETID,
     });
 
-    let string = "Database: Connected";
-    string = highlightWord(string, "Connected", 32);
+    let string = "\t→\tDatabase: Connected";
+    string = highlightWord(string, "→", "dim");
+    string = highlightWord(string, "→", "green");
+    string = highlightWord(string, "Database:", "dim");
+    string = highlightWord(string, "Connected", "bright");
     console.log(string);
   } catch (error) {
-    let string = "Database: Failed to connect";
-    string = highlightWord(string, "Failed to connect", 31);
+    let string = "\t→\tDatabase: Failed to connect";
+    string = highlightWord(string, "→", "dim");
+    string = highlightWord(string, "→", "green");
+    string = highlightWord(string, "Database:", "dim");
+    string = highlightWord(string, "Failed to connect", "red");
     console.error(string, error);
   }
 }
@@ -37,12 +45,18 @@ async function disconnect() {
     try {
       // Closing the connection
       await connection.end();
-      let string = "Database: Disconnected";
-      string = highlightWord(string, "Disconnected", 35);
+      let string = "\t→\tDatabase: Disconnected";
+      string = highlightWord(string, "→", "dim");
+      string = highlightWord(string, "→", "green");
+      string = highlightWord(string, "Database:", "dim");
+      string = highlightWord(string, "Disconnected", "bright");
       console.log(string);
     } catch (error) {
-      let string = "Database: Failed to disconnect";
-      string = highlightWord(string, "Failed to disconnect", 31);
+      let string = "\t→\tDatabase: Failed to disconnect";
+      string = highlightWord(string, "→", "dim");
+      string = highlightWord(string, "→", "green");
+      string = highlightWord(string, "Database:", "dim");
+      string = highlightWord(string, "Failed to disconnect", "red");
       console.error(string, error);
     }
   }
