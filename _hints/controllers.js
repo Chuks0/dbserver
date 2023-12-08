@@ -19,44 +19,47 @@ const {
   removeUser,
   removeQuestion,
   getUsersByEmail,
+  addHintNoUID,
 } = require("../util/sql");
 
-async function getRQ(req, res) {
+async function addUserHint(req, res) {
   try {
-    //const val = await getAllQuestions();
-    const val = await getRandomQuestion();
-    res.json(val);
-  } catch (error) {
-    console.log(error);
-    res.json({ error: 500 });
-  }
-}
-async function getRUQ(req, res) {
-  try {
-    const val = await getRandomUnansweredQuestion(req.params.id);
-    res.json(val);
-  } catch (error) {
-    console.log(error);
-    res.json({ error: 500 });
-  }
-}
-async function getMC(req, res) {
-  try {
-    const val = await getTopQuestionsWithMostCorrectAnswers();
-    res.json(val);
-  } catch (error) {
-    console.log(error);
-    res.json({ error: 500 });
-  }
-}
-async function getHP(req, res) {
-  try {
-    const val = await getTopQuestionsByCorrectPercentage();
-    res.json(val);
-  } catch (error) {
-    console.log(error);
-    res.json({ error: 500 });
-  }
-}
+    let val = await addHint(req.body.Q_id, req.body.Id);
 
-module.exports = { getRQ, getRUQ, getHP, getMC };
+    res.json(val);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 500 });
+  }
+}
+async function addNoUserHint(req, res) {
+  try {
+    let val = await addHintNoUID(req.body.Q_id, req.body.Id);
+
+    res.json(val);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 500 });
+  }
+}
+async function getHintQ(req, res) {
+  try {
+    let val = await getHintUsageCountForQuestion(req.params.id);
+
+    res.json(val);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 500 });
+  }
+}
+async function getHintU(req, res) {
+  try {
+    let val = await getHintUsageCountForUser(req.params.id);
+
+    res.json(val);
+  } catch (error) {
+    console.log(error);
+    res.json({ error: 500 });
+  }
+}
+module.exports = { addNoUserHint, addUserHint, getHintU, getHintQ };

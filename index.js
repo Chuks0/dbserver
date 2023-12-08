@@ -9,6 +9,7 @@ const utils = require("./utils");
 const users = require("./_users/routs");
 const questions = require("./_questions/routs");
 const answers = require("./_answers/routs");
+const hints = require("./_hints/routs");
 const db = require("./sql/database.js");
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(routingUtils.routingLoger);
 app.use("/users", users);
 app.use("/questions", questions);
 app.use("/answers", answers);
+app.use("/hints", hints);
 
 const rl = readline.createInterface({
   input: process.stdin,

@@ -6,7 +6,7 @@ async function getAllUsersNameEmail() {
     const [rows, fields] = await Connection().execute(
       "SELECT Name, Email FROM User"
     );
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -17,7 +17,7 @@ async function getAllQuestions() {
     const [rows, fields] = await Connection().execute(
       "SELECT * FROM Questions"
     );
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -25,7 +25,7 @@ async function getAllQuestions() {
 async function getAllAnswers() {
   try {
     const [rows, fields] = await Connection().execute("SELECT * FROM Answers");
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -36,7 +36,7 @@ async function getQuestionsGuessedCount() {
     const [rows, fields] = await Connection().execute(
       "SELECT Q_id, COUNT(*) as Num_Guesses FROM Guessed GROUP BY Q_id"
     );
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -46,15 +46,15 @@ async function getQuestionsGuessedCount() {
 async function getUsersWhoAnsweredTheMostQuestions() {
   try {
     const [rows, fields] = await Connection().execute(
-      `SELECT * COUNT(A.Q_id) AS correct_answers_count 
+      `SELECT U.Id, U.name, U.email, COUNT(A.Q_id) AS correct_answers_count 
       FROM User U 
       JOIN Answers A ON U.Id = A.Id 
-      JOIN Questions Q ON A.Q_id = Q.Q_id AND A.choice = Q.answer 
+      JOIN Questions Q ON A.Q_id = Q.Q_id AND A.answer = Q.answer 
       GROUP BY U.Id, U.name, U.email 
       ORDER BY correct_answers_count DESC 
       LIMIT 5;`
     );
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -69,8 +69,8 @@ async function getTopUsersByCorrectPercentage() {
           U.name,
           U.email,
           COUNT(A.Q_id) AS total_questions_answered,
-          SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) AS correct_answers_count,
-          SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id) * 100 AS correct_percentage
+          SUM(CASE WHEN A.answer = Q.answer THEN 1 ELSE 0 END) AS correct_answers_count,
+          SUM(CASE WHEN A.answer = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id) * 100 AS correct_percentage
       FROM
           User U
       JOIN
@@ -84,7 +84,7 @@ async function getTopUsersByCorrectPercentage() {
       LIMIT
           5;`
     );
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -105,7 +105,7 @@ async function getRandomQuestion(questionId) {
     `
     );
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -117,13 +117,13 @@ async function getRandomUnansweredQuestion(userId) {
     const [rows, fields] = await Connection().execute(
       `
       SELECT 
-          * 
+          Q.* 
       FROM
           Questions Q
       LEFT JOIN
           Answers A ON Q.Q_id = A.Q_id AND A.Id = ?
       WHERE
-          A.Q_id IS NULL
+          A.A_id IS NULL
       ORDER BY
           RAND()
       LIMIT 1;
@@ -131,7 +131,7 @@ async function getRandomUnansweredQuestion(userId) {
       [userId]
     );
 
-    console.log(rows[0], fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -154,7 +154,7 @@ async function getTopQuestionsWithMostCorrectAnswers() {
       FROM
         Questions Q
       LEFT JOIN
-        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.choice
+        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.answer
       GROUP BY
         Q.Q_id, Q.prompt, Q.A, Q.B, Q.C, Q.D, Q.E, Q.answer
       ORDER BY
@@ -162,7 +162,7 @@ async function getTopQuestionsWithMostCorrectAnswers() {
       LIMIT 5;
     `);
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -187,7 +187,7 @@ async function getTopQuestionsByCorrectPercentage() {
       FROM
         Questions Q
       LEFT JOIN
-        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.choice
+        Answers A ON Q.Q_id = A.Q_id AND Q.answer = A.answer
       GROUP BY
         Q.Q_id, Q.prompt, Q.A, Q.B, Q.C, Q.D, Q.E, Q.answer
       ORDER BY
@@ -195,7 +195,7 @@ async function getTopQuestionsByCorrectPercentage() {
       LIMIT 5;
     `);
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -222,7 +222,7 @@ async function getHintUsageCountForQuestion(questionId) {
       [questionId]
     );
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -250,7 +250,7 @@ async function getHintUsageCountForUser(userId) {
       [userId]
     );
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -266,8 +266,8 @@ async function getUserAccuracy(userId) {
         U.name,
         U.email,
         COUNT(A.Q_id) AS total_answers,
-        SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) AS correct_answers,
-        (SUM(CASE WHEN A.choice = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id)) * 100 AS accuracy_percentage
+        SUM(CASE WHEN A.answer = Q.answer THEN 1 ELSE 0 END) AS correct_answers,
+        (SUM(CASE WHEN A.answer = Q.answer THEN 1 ELSE 0 END) / COUNT(A.Q_id)) * 100 AS accuracy_percentage
       FROM
         User U
       LEFT JOIN
@@ -282,7 +282,7 @@ async function getUserAccuracy(userId) {
       [userId]
     );
 
-    console.log(rows, fields);
+    return [rows, fields];
   } catch (error) {
     console.error("Error:", error);
   }
@@ -297,7 +297,7 @@ async function addUser(name, email) {
       [lastId + 1, name, email]
     );
 
-    console.log("User added successfully:", rows);
+    return 200;
   } catch (error) {
     console.error("Error adding user:", error);
   }
@@ -319,21 +319,35 @@ async function addQuestion(
       [prompt, optionA, optionB, optionC, optionD, optionE, answer]
     );
 
-    console.log("Question added successfully:", rows);
+    return 200;
   } catch (error) {
     console.error("Error adding question:", error);
   }
 }
 
 //add new answer
-async function addAnswer(questionId, userId, choice) {
+async function addAnswer(questionId, userId, answer) {
   try {
+    const lastId = await getLastAnswerId();
     const [rows, fields] = await Connection().execute(
-      "INSERT INTO Answers (Q_id, Id, choice) VALUES (?, ?, ?);",
-      [questionId, userId, choice]
+      "INSERT INTO Answers (A_id ,Q_id, Id, answer) VALUES (?, ?, ?, ?);",
+      [lastId + 1, questionId, userId, answer]
     );
 
-    console.log("Answer added successfully:", rows);
+    return 200;
+  } catch (error) {
+    console.error("Error adding answer:", error);
+  }
+}
+async function addAnswerNoUID(questionId, answer) {
+  try {
+    const lastId = await getLastAnswerId();
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO Answers (A_id ,Q_id, answer) VALUES (?, ?, ?);",
+      [lastId + 1, questionId, answer]
+    );
+
+    return 200;
   } catch (error) {
     console.error("Error adding answer:", error);
   }
@@ -342,12 +356,26 @@ async function addAnswer(questionId, userId, choice) {
 //add new hint
 async function addHint(questionId, userId) {
   try {
+    const lastId = await getLastHintId();
     const [rows, fields] = await Connection().execute(
-      "INSERT INTO Hint (Q_id, Id) VALUES (?, ?);",
-      [questionId, userId]
+      "INSERT INTO Hint (H_id ,Q_id, Id) VALUES (?, ?, ?);",
+      [lastId + 1, questionId, userId]
     );
 
-    console.log("Hint added successfully:", rows);
+    return 200;
+  } catch (error) {
+    console.error("Error adding hint:", error);
+  }
+}
+async function addHintNoUID(questionId) {
+  try {
+    const lastId = await getLastHintId();
+    const [rows, fields] = await Connection().execute(
+      "INSERT INTO Hint (H_id ,Q_id) VALUES (?, ?);",
+      [lastId + 1, questionId]
+    );
+
+    return 200;
   } catch (error) {
     console.error("Error adding hint:", error);
   }
@@ -361,7 +389,7 @@ async function removeUser(userId) {
       [userId]
     );
 
-    console.log("User removed successfully:", rows);
+    return 200;
   } catch (error) {
     console.error("Error removing user:", error);
   }
@@ -375,9 +403,23 @@ async function removeQuestion(questionId) {
       [questionId]
     );
 
-    console.log("Question removed successfully:", rows);
+    return 200;
   } catch (error) {
     console.error("Error removing question:", error);
+  }
+}
+
+// find user based on email
+async function getUsersByEmail(email) {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT * FROM User WHERE email = ?",
+      [email]
+    );
+    return [rows, fields];
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
   }
 }
 
@@ -393,10 +435,43 @@ async function getLastUserId() {
       return null; // No users in the table
     }
   } catch (error) {
-    console.error("Error getting last user ID:", error);
+    console.error(error);
     return null;
   }
 }
+
+async function getLastAnswerId() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT A_id FROM Answers ORDER BY A_id DESC LIMIT 1;"
+    );
+    if (rows.length > 0) {
+      return rows[0].A_id;
+    } else {
+      return null; // No Answers in the table
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+async function getLastHintId() {
+  try {
+    const [rows, fields] = await Connection().execute(
+      "SELECT H_id FROM Hint ORDER BY H_id DESC LIMIT 1;"
+    );
+    if (rows.length > 0) {
+      return rows[0].A_id;
+    } else {
+      return null; // No Hint in the table
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 module.exports = {
   getAllUsersNameEmail,
   getAllQuestions,
@@ -417,4 +492,7 @@ module.exports = {
   addHint,
   removeUser,
   removeQuestion,
+  getUsersByEmail,
+  addAnswerNoUID,
+  addHintNoUID,
 };

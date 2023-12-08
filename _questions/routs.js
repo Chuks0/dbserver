@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const {} = require("./controllers");
+const { getRQ, getRUQ, getHP, getMC } = require("./controllers");
 
-// router.route("/").get().post();
+router.route("/").get(getRQ);
+router.route("/:id").get(getRUQ);
+router.route("/m/c").get(getMC);
+router.route("/h/p").get(getHP);
 
 module.exports = router;
